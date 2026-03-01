@@ -2,7 +2,7 @@
 
 ## Current Status
 
-Phases 1–5 are complete. Auth, database schema, habit CRUD, home screen with optimistic increment, and heatmap visualization are all functional. The app runs in dark mode with habit cards showing a GitHub-style heatmap grid (16 weeks, 7 rows). **Next up: Phase 6 (Habit detail view).**
+All 9 phases are complete. The MVP is live — auth, habit CRUD, heatmap visualization, habit detail view with monthly calendar, dark theme, and Vercel deployment are all functional.
 
 ---
 
@@ -143,25 +143,26 @@ Not included:
 
 # Phase 6 — Habit Detail View
 
-### [ ] Habit detail modal
+### [DONE] Habit detail modal
 
-- Opens as a bottom sheet / modal when tapping a habit card (not the edit/delete/increment buttons)
-- Header: habit name, description (or "No Description"), close (X) button
-- Full-width heatmap (reuse `<Heatmap />`) with month labels above and day-of-week labels (Mon, Wed, Fri) on the left
-- Summary row below heatmap: streak goal badge, fire icon with current streak count
+- `components/habits/habit-detail-dialog.tsx` — controlled dialog opened by clicking a habit card
+- Header: habit name, "No Description" placeholder, close (X) button
+- Full-width `<Heatmap showLabels />` with month labels above and day-of-week labels (Mon, Wed, Fri) on the left
+- Summary row: "No Streak Goal" badge, flame icon with streak count (static placeholders)
 - Action buttons: edit (pencil) and settings (gear) icons
+- Edit button closes detail dialog first, then opens edit dialog
 
-### [ ] Monthly calendar view
+### [DONE] Monthly calendar view
 
-- 7-column grid (Sun–Sat) for the current month
-- Days with entries get a tinted background (habit color, low opacity)
-- Colored dots below the date number indicating count (e.g., 3 dots = count of 3)
-- Days outside the current month shown but muted
+- `components/habits/month-calendar.tsx` — client component with month state
+- 7-column grid (Sun–Sat) with leading/trailing days from adjacent months
+- Days with entries get tinted background via `color-mix()` and colored dots (up to 4)
+- Non-current-month days at reduced opacity
 
-### [ ] Date navigation
+### [DONE] Date navigation
 
 - "Feb 2026" label with calendar icon at bottom-left
-- Previous / next month arrow buttons at bottom-right
+- Previous / next month chevron buttons at bottom-right
 - Navigating months updates the calendar grid; heatmap stays fixed
 
 ---
@@ -194,18 +195,27 @@ Not included:
 
 - Dashboard skeleton via `app/dashboard/loading.tsx`
 
+### [DONE] Dark theme consistency
+
+- Landing page (`app/page.tsx`) — minimal splash with app name, tagline, and CTA buttons
+- Auth page (`app/auth/page.tsx`) — replaced hardcoded light-mode colors with theme-aware tokens
+
+### [DONE] Timezone-safe todayCount
+
+- Server query uses ±1 day buffer to cover client/server timezone differences
+- `todayCount` derived on the client from entries array using client's local date
+
 ---
 
 # Phase 9 — Deployment
 
-### [ ] Environment config
+### [DONE] Environment config
 
-- Production Supabase keys
-- Env setup for hosting platform
+- Production Supabase keys configured in Vercel
 
-### [ ] Deploy app
+### [DONE] Deploy app
 
-- Deploy to Vercel
+- Deployed to Vercel
 
 ---
 
@@ -216,3 +226,4 @@ Not included:
 - **Upsert strategy**: Postgres function `increment_habit_entry(habit_id, entry_date)` for atomic increment
 - **Data fetching**: Server actions for mutations, single-range fetch for entries to avoid N+1
 - **Rendering**: Server Components for data fetching, Client Components for interactions
+- **Timezone handling**: Server fetches entries with ±1 day buffer; `todayCount` derived on client to avoid server/client date mismatch
