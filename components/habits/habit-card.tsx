@@ -7,10 +7,12 @@ import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { incrementHabitEntry } from "@/app/actions/entries";
 import { getLocalDateString } from "@/lib/dates";
-import type { HabitWithTodayEntry } from "@/lib/types";
+import { HEATMAP_WEEKS } from "@/lib/constants";
+import { Heatmap } from "@/components/habits/heatmap";
+import type { HabitWithEntries } from "@/lib/types";
 
 interface HabitCardProps {
-  habit: HabitWithTodayEntry;
+  habit: HabitWithEntries;
   onEdit: () => void;
   onDelete: () => void;
 }
@@ -103,6 +105,15 @@ export function HabitCard({ habit, onEdit, onDelete }: HabitCardProps) {
             } as React.CSSProperties
           }
         />
+
+        <div className="mt-3">
+          <Heatmap
+            entries={habit.entries}
+            dailyTarget={habit.daily_target}
+            color={habit.color}
+            weeks={HEATMAP_WEEKS}
+          />
+        </div>
       </CardContent>
     </Card>
   );

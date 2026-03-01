@@ -37,6 +37,9 @@ yarn-error.log*
 # design reference images
 docs/design/
 
+# claude code
+.claude/
+
 # vercel
 .vercel
 

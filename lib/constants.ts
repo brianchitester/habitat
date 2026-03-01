@@ -19,3 +19,6 @@ export const HABIT_COLORS = [
 
 export const DEFAULT_COLOR = HABIT_COLORS[10].value; // Blue
 export const DEFAULT_DAILY_TARGET = 1;
+
+export const HEATMAP_WEEKS = 16;
+export const HEATMAP_EMPTY_COLOR = "rgba(255, 255, 255, 0.03)";

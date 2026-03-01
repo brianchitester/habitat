@@ -2,24 +2,22 @@
 
 ## Current Status
 
-Phase 1 (Project Setup) is complete. Auth scaffold is in place with Next.js 16 + Supabase (`@supabase/ssr`). Database schema and RLS policies still need to be created in Supabase.
+Phases 1–4 are complete. Auth, database schema, habit CRUD, and the home screen are all functional. The app runs in dark mode with habit cards, optimistic increment, and create/edit/delete flows. **Next up: Phase 5 (Heatmap visualization).**
 
 ---
 
 ## Scaffold Cleanup (Pre-MVP)
 
-These items were identified during the initial scaffold review and should be addressed before or during Phase 3 work.
-
 ### Recommended
 
-- [ ] **Add form validation to auth form** — `react-hook-form` and `zod` are installed but unused. Add email format and password length validation to the sign in/sign up forms.
-- [ ] **Improve auth callback error handling** — `app/auth/callback/route.ts` silently redirects to dashboard even if `exchangeCodeForSession` fails. Should redirect with an error param on failure.
+- [ ] **Add form validation to auth form** — `react-hook-form` and `zod` are installed but unused in auth. Add email format and password length validation.
+- [ ] **Improve auth callback error handling** — `app/auth/callback/route.ts` silently redirects on failure. Should redirect with an error param.
 - [ ] **Add accessibility to password toggle** — The show/hide password button in `components/auth/auth-form.tsx` lacks an `aria-label`.
 
-### Minor
+### Done
 
-- [ ] **Add dashboard loading state** — `app/dashboard/page.tsx` has no loading UI while the server component fetches the session. Could add a `loading.tsx` with a skeleton.
-- [ ] **Update database types** — `lib/supabase/database.types.ts` has a placeholder `user_progress` table. Replace with `habits` and `habit_entries` types once the schema is created (or regenerate with `supabase gen types`).
+- [x] **Add dashboard loading state** — `app/dashboard/loading.tsx` added with skeleton UI.
+- [x] **Update database types** — `lib/supabase/database.types.ts` replaced with `habits`, `habit_entries`, and `Functions` types.
 
 ---
 
@@ -60,39 +58,15 @@ Not included:
 - `.env.local` configured, `.env.example` provided
 - Client and server Supabase clients created
 
-### [ ] Database schema (MVP)
+### [DONE] Database schema (MVP)
 
-Create tables in Supabase SQL Editor:
+- Tables `habits` and `habit_entries` created via `docs/schema.sql`
+- Unique constraint on `(habit_id, date)`, indexes on `(user_id, date)` and `(habit_id, date)`
+- Atomic `increment_habit_entry` RPC function for race-safe incrementing
 
-#### `habits`
+### [DONE] Supabase RLS policies
 
-- id (uuid, PK, default `gen_random_uuid()`)
-- user_id (uuid, FK → auth.users)
-- name (text, not null)
-- color (text, not null)
-- daily_target (int, not null, check >= 1)
-- created_at (timestamptz, default now())
-- updated_at (timestamptz, default now())
-
-#### `habit_entries`
-
-- id (uuid, PK, default `gen_random_uuid()`)
-- habit_id (uuid, FK → habits, on delete cascade)
-- user_id (uuid, FK → auth.users)
-- date (date, not null)
-- count (int, not null, default 0, check >= 0)
-- created_at (timestamptz, default now())
-- updated_at (timestamptz, default now())
-
-Constraints:
-
-- unique(habit_id, date)
-- index: (user_id, date) for calendar queries
-- index: (habit_id, date) for heatmap range queries
-
-### [ ] Supabase RLS policies
-
-- Users can only access their own habits + entries (all CRUD operations)
+- Users can only CRUD their own habits + entries
 
 ---
 
@@ -108,48 +82,43 @@ Constraints:
 
 # Phase 3 — Habit CRUD
 
-### [ ] Create habit screen
+### [DONE] Create habit screen
 
-Fields: Name, Color, Daily target
+- Dialog with form (name, color picker, daily target)
+- Zod v4 validation via `standardSchemaResolver`
+- Server action creates habit, revalidates dashboard
 
-Acceptance:
-- Can create habit
-- Saved to Supabase
-- Appears on home screen
+### [DONE] Edit habit screen
 
-### [ ] Edit habit screen
+- Same dialog in edit mode, pre-filled with existing values
+- Server action updates habit
 
-- Update name, color, daily target
+### [DONE] Delete habit
 
-Acceptance:
-- Changes persist
-- UI updates immediately
-
-### [ ] Delete habit
-
-- Delete action from edit screen
-- Habit + entries removed from DB + UI
+- AlertDialog confirmation
+- Server action deletes habit (cascade removes entries)
 
 ---
 
 # Phase 4 — Home Screen (Core UX)
 
-### [ ] Habit list UI
+### [DONE] Habit list UI
 
-- Render list of habits as cards
-- Show: name, color, today's progress (via heatmap)
+- Grid of habit cards with color accent, progress bar, edit/delete/increment buttons
+- Empty state with create prompt
+- Skeleton loading state (`loading.tsx`)
+- Dark mode enabled (`className="dark"` on `<html>`)
 
-### [ ] Increment habit (+ button)
+### [DONE] Increment habit (+ button)
 
-- Tap increments today's count via atomic upsert
-- Works with no existing row (creates one)
-- Multiple taps accumulate
-- Optimistic UI update
+- Optimistic UI update with server reconciliation
+- Atomic upsert via `increment_habit_entry` RPC
+- Count displayed as `count / daily_target`
 
-### [ ] Fetch habit entries (range query)
+### [ ] Fetch habit entries (range query) — deferred to Phase 5
 
-- Fetch entries for last ~120 days
-- Single query for all habits to avoid N+1
+- Currently only fetches today's entries
+- Full range query (last ~120 days) needed for heatmap
 
 ---
 
@@ -193,33 +162,32 @@ Rules:
 
 # Phase 7 — Data Consistency
 
-### [ ] Date normalization
+### [DONE] Date normalization
 
-- Client sends `localDate` (YYYY-MM-DD) derived from device
-- Server validates format and uses as the `date`
-- No duplicate days, no off-by-one errors
+- `lib/dates.ts` — `getLocalDateString()` sends device local date as YYYY-MM-DD
+- Server validates format via Zod before using as the `date`
 
-### [ ] Optimistic UI updates
+### [DONE] Optimistic UI updates
 
-- Increment updates UI immediately
-- Syncs with backend
-- Handles failure gracefully (basic revert)
+- Increment updates count immediately in `habit-card.tsx`
+- Server response reconciles count; reverts on error
 
 ---
 
 # Phase 8 — Polish (MVP-level)
 
-### [ ] Color system integration
+### [PARTIAL] Color system integration
 
-- Habit color drives heatmap color and UI accents
+- Habit color drives card accent bar, increment button, and progress bar
+- [ ] Habit color drives heatmap intensity (Phase 5)
 
-### [ ] Empty states
+### [DONE] Empty states
 
-- No habits → prompt to create one
+- No habits → prompt with "Create Your First Habit" button
 
-### [ ] Loading states
+### [DONE] Loading states
 
-- Skeletons or spinners where needed
+- Dashboard skeleton via `app/dashboard/loading.tsx`
 
 ---
 

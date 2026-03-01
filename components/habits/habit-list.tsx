@@ -7,10 +7,10 @@ import { HabitCard } from "@/components/habits/habit-card";
 import { HabitFormDialog } from "@/components/habits/habit-form-dialog";
 import { DeleteHabitDialog } from "@/components/habits/delete-habit-dialog";
 import { EmptyState } from "@/components/habits/empty-state";
-import type { Habit, HabitWithTodayEntry } from "@/lib/types";
+import type { Habit, HabitWithEntries } from "@/lib/types";
 
 interface HabitListProps {
-  habits: HabitWithTodayEntry[];
+  habits: HabitWithEntries[];
 }
 
 export function HabitList({ habits }: HabitListProps) {

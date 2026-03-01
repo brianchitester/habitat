@@ -21,7 +21,7 @@ export default function DashboardLoading() {
         </div>
         <div className="grid gap-3 sm:grid-cols-2">
           {Array.from({ length: 4 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
+            <Skeleton key={i} className="h-44 rounded-lg" />
           ))}
         </div>
       </main>

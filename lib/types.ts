@@ -10,3 +10,19 @@ export type HabitEntryInsert = Database["public"]["Tables"]["habit_entries"]["In
 export type HabitWithTodayEntry = Habit & {
   todayCount: number;
 };
+
+export type HeatmapEntry = {
+  date: string;
+  count: number;
+};
+
+export type HeatmapCell = {
+  date: string;
+  count: number;
+  intensity: number;
+};
+
+export type HabitWithEntries = Habit & {
+  todayCount: number;
+  entries: HeatmapEntry[];
+};

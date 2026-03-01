@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import { getLocalDateString } from "@/lib/dates";
+import { getLocalDateString, subtractDays } from "@/lib/dates";
+import { HEATMAP_WEEKS } from "@/lib/constants";
 import { UserProfile } from "@/components/auth/user-profile";
 import { HabitList } from "@/components/habits/habit-list";
-import type { HabitWithTodayEntry } from "@/lib/types";
+import type { HabitWithEntries, HeatmapEntry } from "@/lib/types";
 
 export default async function DashboardPage() {
   const supabase = await getSupabaseServer();
@@ -16,8 +17,9 @@ export default async function DashboardPage() {
   }
 
   const today = getLocalDateString();
+  const startDate = subtractDays(today, HEATMAP_WEEKS * 7 - 1);
 
-  // Fetch habits and today's entries in parallel (avoid N+1)
+  // Fetch habits and date-range entries in parallel (avoid N+1)
   const [habitsResult, entriesResult] = await Promise.all([
     supabase
       .from("habits")
@@ -26,24 +28,39 @@ export default async function DashboardPage() {
       .order("created_at", { ascending: true }),
     supabase
       .from("habit_entries")
-      .select("habit_id, count")
+      .select("habit_id, date, count")
       .eq("user_id", user.id)
-      .eq("date", today),
+      .gte("date", startDate)
+      .lte("date", today),
   ]);
 
   const habits = habitsResult.data ?? [];
   const entries = entriesResult.data ?? [];
 
-  // Build a map of habit_id -> today's count
+  // Group entries by habit_id
+  const entriesByHabit = new Map<string, HeatmapEntry[]>();
   const todayMap = new Map<string, number>();
   for (const entry of entries) {
-    todayMap.set(entry.habit_id, entry.count);
+    // Build heatmap entries map
+    if (!entriesByHabit.has(entry.habit_id)) {
+      entriesByHabit.set(entry.habit_id, []);
+    }
+    entriesByHabit.get(entry.habit_id)!.push({
+      date: entry.date,
+      count: entry.count,
+    });
+
+    // Track today's count separately
+    if (entry.date === today) {
+      todayMap.set(entry.habit_id, entry.count);
+    }
   }
 
-  // Merge habits with today's entry counts
-  const habitsWithToday: HabitWithTodayEntry[] = habits.map((habit) => ({
+  // Merge habits with entries
+  const habitsWithEntries: HabitWithEntries[] = habits.map((habit) => ({
     ...habit,
     todayCount: todayMap.get(habit.id) ?? 0,
+    entries: entriesByHabit.get(habit.id) ?? [],
   }));
 
   return (
@@ -62,7 +79,7 @@ export default async function DashboardPage() {
       </header>
 
       <main className="max-w-3xl mx-auto py-6 px-4 sm:px-6">
-        <HabitList habits={habitsWithToday} />
+        <HabitList habits={habitsWithEntries} />
       </main>
     </div>
   );
