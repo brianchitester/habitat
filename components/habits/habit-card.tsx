@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { Plus, Pencil } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
@@ -14,14 +14,12 @@ import type { HabitWithEntries } from "@/lib/types";
 interface HabitCardProps {
   habit: HabitWithEntries;
   onEdit: () => void;
-  onDelete: () => void;
   onCardClick: () => void;
 }
 
 export function HabitCard({
   habit,
   onEdit,
-  onDelete,
   onCardClick,
 }: HabitCardProps) {
   // Derive todayCount on the client to avoid server/client timezone mismatch.
@@ -87,18 +85,6 @@ export function HabitCard({
             >
               <Pencil className="h-4 w-4" />
               <span className="sr-only">Edit</span>
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-8 w-8 text-muted-foreground"
-              onClick={(e) => {
-                e.stopPropagation();
-                onDelete();
-              }}
-            >
-              <Trash2 className="h-4 w-4" />
-              <span className="sr-only">Delete</span>
             </Button>
             <Button
               size="icon"

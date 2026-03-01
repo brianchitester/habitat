@@ -1,14 +1,12 @@
 "use client";
 
-import { Flame, Pencil, Settings } from "lucide-react";
+import { Pencil, Trash2 } from "lucide-react";
 import {
   Dialog,
   DialogContent,
-  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Heatmap } from "@/components/habits/heatmap";
 import { MonthCalendar } from "@/components/habits/month-calendar";
@@ -20,6 +18,7 @@ interface HabitDetailDialogProps {
   onOpenChange: (open: boolean) => void;
   habit: HabitWithEntries;
   onEdit: () => void;
+  onDelete: () => void;
 }
 
 export function HabitDetailDialog({
@@ -27,10 +26,16 @@ export function HabitDetailDialog({
   onOpenChange,
   habit,
   onEdit,
+  onDelete,
 }: HabitDetailDialogProps) {
   function handleEdit() {
     onOpenChange(false);
     onEdit();
+  }
+
+  function handleDelete() {
+    onOpenChange(false);
+    onDelete();
   }
 
   return (
@@ -38,7 +43,6 @@ export function HabitDetailDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{habit.name}</DialogTitle>
-          <DialogDescription>No Description</DialogDescription>
         </DialogHeader>
 
         <Heatmap
@@ -49,15 +53,7 @@ export function HabitDetailDialog({
           showLabels
         />
 
-        {/* Summary row */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <Badge variant="outline">No Streak Goal</Badge>
-            <Badge variant="outline">
-              <Flame className="h-3 w-3" />
-              0
-            </Badge>
-          </div>
+        <div className="flex items-center justify-end">
           <div className="flex items-center gap-1">
             <Button
               variant="outline"
@@ -72,9 +68,10 @@ export function HabitDetailDialog({
               variant="outline"
               size="icon"
               className="h-8 w-8"
+              onClick={handleDelete}
             >
-              <Settings className="h-4 w-4" />
-              <span className="sr-only">Settings</span>
+              <Trash2 className="h-4 w-4" />
+              <span className="sr-only">Delete</span>
             </Button>
           </div>
         </div>

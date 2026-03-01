@@ -67,11 +67,11 @@ export function Heatmap({ entries, dailyTarget, color, weeks, showLabels = false
 
   const heatmapGrid = (
     <div
-      className="grid w-full"
+      className="grid w-full overflow-hidden"
       style={{
         gridTemplateRows: "repeat(7, 1fr)",
         gridAutoFlow: "column",
-        gridAutoColumns: "1fr",
+        gridAutoColumns: "minmax(0, 1fr)",
         gap: "2px",
       }}
     >
@@ -90,7 +90,7 @@ export function Heatmap({ entries, dailyTarget, color, weeks, showLabels = false
             style={{
               backgroundColor: bg,
               opacity,
-              minHeight: "6px",
+              minHeight: 0,
               outline: isToday ? `1.5px solid ${color}` : undefined,
               outlineOffset: isToday ? "-0.5px" : undefined,
             }}

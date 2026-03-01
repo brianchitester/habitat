@@ -47,9 +47,6 @@ export function HabitList({ habits }: HabitListProps) {
             key={habit.id}
             habit={habit}
             onEdit={() => setEditHabit(habit)}
-            onDelete={() =>
-              setDeleteTarget({ id: habit.id, name: habit.name })
-            }
             onCardClick={() => setDetailHabit(habit)}
           />
         ))}
@@ -78,6 +75,11 @@ export function HabitList({ habits }: HabitListProps) {
             const habit = detailHabit;
             setDetailHabit(undefined);
             setEditHabit(habit);
+          }}
+          onDelete={() => {
+            const habit = detailHabit;
+            setDetailHabit(undefined);
+            setDeleteTarget({ id: habit.id, name: habit.name });
           }}
         />
       )}
