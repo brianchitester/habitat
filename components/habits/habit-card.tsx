@@ -18,11 +18,17 @@ interface HabitCardProps {
   onCardClick: () => void;
 }
 
-export function HabitCard({ habit, onEdit, onDelete, onCardClick }: HabitCardProps) {
+export function HabitCard({
+  habit,
+  onEdit,
+  onDelete,
+  onCardClick,
+}: HabitCardProps) {
   // Derive todayCount on the client to avoid server/client timezone mismatch.
   // The server's getLocalDateString() may return a different date than the client's.
   const clientToday = getLocalDateString();
-  const initialCount = habit.entries.find((e) => e.date === clientToday)?.count ?? 0;
+  const initialCount =
+    habit.entries.find((e) => e.date === clientToday)?.count ?? 0;
   const [count, setCount] = useState(initialCount);
   const [isPending, startTransition] = useTransition();
 
@@ -51,12 +57,15 @@ export function HabitCard({ habit, onEdit, onDelete, onCardClick }: HabitCardPro
   }
 
   return (
-    <Card className="relative overflow-hidden cursor-pointer" onClick={onCardClick}>
+    <Card
+      className="relative overflow-hidden cursor-pointer"
+      onClick={onCardClick}
+    >
       <div
         className="absolute left-0 top-0 bottom-0 w-1"
         style={{ backgroundColor: habit.color }}
       />
-      <CardContent className="p-4 pl-5">
+      <CardContent className="pl-5">
         <div className="flex items-start justify-between gap-3">
           <div className="flex-1 min-w-0">
             <h3 className="font-medium truncate">{habit.name}</h3>
@@ -66,12 +75,15 @@ export function HabitCard({ habit, onEdit, onDelete, onCardClick }: HabitCardPro
             </p>
           </div>
 
-          <div className="flex items-center gap-1 shrink-0">
+          <div className="flex items-center gap-6 shrink-0">
             <Button
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-muted-foreground"
-              onClick={(e) => { e.stopPropagation(); onEdit(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit();
+              }}
             >
               <Pencil className="h-4 w-4" />
               <span className="sr-only">Edit</span>
@@ -80,7 +92,10 @@ export function HabitCard({ habit, onEdit, onDelete, onCardClick }: HabitCardPro
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-muted-foreground"
-              onClick={(e) => { e.stopPropagation(); onDelete(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete();
+              }}
             >
               <Trash2 className="h-4 w-4" />
               <span className="sr-only">Delete</span>
@@ -88,7 +103,10 @@ export function HabitCard({ habit, onEdit, onDelete, onCardClick }: HabitCardPro
             <Button
               size="icon"
               className="h-9 w-9"
-              onClick={(e) => { e.stopPropagation(); handleIncrement(); }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleIncrement();
+              }}
               disabled={isPending}
               style={{
                 backgroundColor: habit.color,
