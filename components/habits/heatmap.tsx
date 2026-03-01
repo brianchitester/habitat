@@ -1,7 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
-import { getLocalDateString, getDayOfWeek, subtractDays, generateDateRange } from "@/lib/dates";
+import { getLocalDateString, getDayOfWeek, subtractDays, generateDateRange, parseDate, getMonthShortName } from "@/lib/dates";
 import { HEATMAP_EMPTY_COLOR } from "@/lib/constants";
 import type { HeatmapEntry } from "@/lib/types";
 
@@ -10,9 +10,10 @@ interface HeatmapProps {
   dailyTarget: number;
   color: string;
   weeks: number;
+  showLabels?: boolean;
 }
 
-export function Heatmap({ entries, dailyTarget, color, weeks }: HeatmapProps) {
+export function Heatmap({ entries, dailyTarget, color, weeks, showLabels = false }: HeatmapProps) {
   const today = getLocalDateString();
 
   const cells = useMemo(() => {
@@ -39,7 +40,32 @@ export function Heatmap({ entries, dailyTarget, color, weeks }: HeatmapProps) {
     });
   }, [entries, dailyTarget, today, weeks]);
 
-  return (
+  // Compute month labels: find column index where each new month starts
+  const monthLabels = useMemo(() => {
+    if (!showLabels) return [];
+    const labels: { name: string; col: number }[] = [];
+    let prevMonth = -1;
+    for (let i = 0; i < cells.length; i++) {
+      const col = Math.floor(i / 7);
+      const month = parseDate(cells[i].date).getMonth();
+      if (month !== prevMonth) {
+        // Only add if this is the first cell in this column with the new month
+        // (i.e. row 0 of this column)
+        if (i % 7 === 0) {
+          labels.push({ name: getMonthShortName(cells[i].date), col });
+        } else if (labels.length === 0 || labels[labels.length - 1].col !== col + 1) {
+          // Month boundary mid-column — place label on next column
+          labels.push({ name: getMonthShortName(cells[i].date), col: col + 1 });
+        }
+        prevMonth = month;
+      }
+    }
+    return labels;
+  }, [cells, showLabels]);
+
+  const DAY_LABELS = ["Mon", "", "Wed", "", "Fri", "", ""];
+
+  const heatmapGrid = (
     <div
       className="grid w-full"
       style={{
@@ -72,6 +98,61 @@ export function Heatmap({ entries, dailyTarget, color, weeks }: HeatmapProps) {
           />
         );
       })}
+    </div>
+  );
+
+  if (!showLabels) return heatmapGrid;
+
+  const totalCols = Math.ceil(cells.length / 7);
+
+  return (
+    <div className="flex flex-col gap-1">
+      {/* Month labels row */}
+      <div className="flex">
+        {/* Spacer for day-of-week label column */}
+        <div className="w-8 shrink-0" />
+        <div
+          className="grid w-full"
+          style={{
+            gridTemplateColumns: `repeat(${totalCols}, 1fr)`,
+            gap: "2px",
+          }}
+        >
+          {Array.from({ length: totalCols }, (_, col) => {
+            const label = monthLabels.find((l) => l.col === col);
+            return (
+              <div
+                key={col}
+                className="text-[10px] text-muted-foreground leading-none"
+              >
+                {label?.name ?? ""}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Main row: day labels + heatmap grid */}
+      <div className="flex">
+        {/* Day-of-week labels */}
+        <div
+          className="w-8 shrink-0 grid"
+          style={{
+            gridTemplateRows: "repeat(7, 1fr)",
+            gap: "2px",
+          }}
+        >
+          {DAY_LABELS.map((label, i) => (
+            <div
+              key={i}
+              className="text-[10px] text-muted-foreground flex items-center justify-end pr-1.5"
+            >
+              {label}
+            </div>
+          ))}
+        </div>
+        {heatmapGrid}
+      </div>
     </div>
   );
 }

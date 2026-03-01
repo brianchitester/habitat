@@ -10,7 +10,7 @@ export function getLocalDateString(date: Date = new Date()): string {
 }
 
 /** Parses a YYYY-MM-DD string into a local Date at midnight. */
-function parseDate(dateStr: string): Date {
+export function parseDate(dateStr: string): Date {
   const [y, m, d] = dateStr.split("-").map(Number);
   return new Date(y, m - 1, d);
 }
@@ -33,6 +33,32 @@ export function addDays(dateStr: string, n: number): string {
 export function getDayOfWeek(dateStr: string): number {
   const jsDay = parseDate(dateStr).getDay(); // 0=Sun … 6=Sat
   return jsDay === 0 ? 6 : jsDay - 1;
+}
+
+const MONTH_SHORT_NAMES = [
+  "Jan", "Feb", "Mar", "Apr", "May", "Jun",
+  "Jul", "Aug", "Sep", "Oct", "Nov", "Dec",
+] as const;
+
+/** Returns short month name ("Jan", "Feb", etc.) for a YYYY-MM-DD string. */
+export function getMonthShortName(dateStr: string): string {
+  const month = parseDate(dateStr).getMonth();
+  return MONTH_SHORT_NAMES[month];
+}
+
+/** Returns "Feb 2026" style label for a given year and 0-indexed month. */
+export function getMonthLabel(year: number, month: number): string {
+  return `${MONTH_SHORT_NAMES[month]} ${year}`;
+}
+
+/** Returns 0 (Sun) through 6 (Sat) for the first day of the given month. */
+export function getFirstDayOfMonth(year: number, month: number): number {
+  return new Date(year, month, 1).getDay();
+}
+
+/** Returns the number of days in the given month (0-indexed). */
+export function getDaysInMonth(year: number, month: number): number {
+  return new Date(year, month + 1, 0).getDate();
 }
 
 /** Returns an array of YYYY-MM-DD strings from startDate to endDate inclusive. */

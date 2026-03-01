@@ -15,9 +15,10 @@ interface HabitCardProps {
   habit: HabitWithEntries;
   onEdit: () => void;
   onDelete: () => void;
+  onCardClick: () => void;
 }
 
-export function HabitCard({ habit, onEdit, onDelete }: HabitCardProps) {
+export function HabitCard({ habit, onEdit, onDelete, onCardClick }: HabitCardProps) {
   const [count, setCount] = useState(habit.todayCount);
   const [isPending, startTransition] = useTransition();
 
@@ -46,7 +47,7 @@ export function HabitCard({ habit, onEdit, onDelete }: HabitCardProps) {
   }
 
   return (
-    <Card className="relative overflow-hidden">
+    <Card className="relative overflow-hidden cursor-pointer" onClick={onCardClick}>
       <div
         className="absolute left-0 top-0 bottom-0 w-1"
         style={{ backgroundColor: habit.color }}
@@ -66,7 +67,7 @@ export function HabitCard({ habit, onEdit, onDelete }: HabitCardProps) {
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-muted-foreground"
-              onClick={onEdit}
+              onClick={(e) => { e.stopPropagation(); onEdit(); }}
             >
               <Pencil className="h-4 w-4" />
               <span className="sr-only">Edit</span>
@@ -75,7 +76,7 @@ export function HabitCard({ habit, onEdit, onDelete }: HabitCardProps) {
               variant="ghost"
               size="icon"
               className="h-8 w-8 text-muted-foreground"
-              onClick={onDelete}
+              onClick={(e) => { e.stopPropagation(); onDelete(); }}
             >
               <Trash2 className="h-4 w-4" />
               <span className="sr-only">Delete</span>
@@ -83,7 +84,7 @@ export function HabitCard({ habit, onEdit, onDelete }: HabitCardProps) {
             <Button
               size="icon"
               className="h-9 w-9"
-              onClick={handleIncrement}
+              onClick={(e) => { e.stopPropagation(); handleIncrement(); }}
               disabled={isPending}
               style={{
                 backgroundColor: habit.color,

@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { HabitCard } from "@/components/habits/habit-card";
 import { HabitFormDialog } from "@/components/habits/habit-form-dialog";
 import { DeleteHabitDialog } from "@/components/habits/delete-habit-dialog";
+import { HabitDetailDialog } from "@/components/habits/habit-detail-dialog";
 import { EmptyState } from "@/components/habits/empty-state";
 import type { Habit, HabitWithEntries } from "@/lib/types";
 
@@ -20,6 +21,7 @@ export function HabitList({ habits }: HabitListProps) {
     id: string;
     name: string;
   } | undefined>();
+  const [detailHabit, setDetailHabit] = useState<HabitWithEntries | undefined>();
 
   if (habits.length === 0) {
     return (
@@ -48,6 +50,7 @@ export function HabitList({ habits }: HabitListProps) {
             onDelete={() =>
               setDeleteTarget({ id: habit.id, name: habit.name })
             }
+            onCardClick={() => setDetailHabit(habit)}
           />
         ))}
       </div>
@@ -64,6 +67,18 @@ export function HabitList({ habits }: HabitListProps) {
           onOpenChange={(open) => !open && setDeleteTarget(undefined)}
           habitId={deleteTarget.id}
           habitName={deleteTarget.name}
+        />
+      )}
+      {detailHabit && (
+        <HabitDetailDialog
+          open={!!detailHabit}
+          onOpenChange={(open) => !open && setDetailHabit(undefined)}
+          habit={detailHabit}
+          onEdit={() => {
+            const habit = detailHabit;
+            setDetailHabit(undefined);
+            setEditHabit(habit);
+          }}
         />
       )}
     </>

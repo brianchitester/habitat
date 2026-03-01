@@ -2,7 +2,7 @@
 
 ## Current Status
 
-Phases 1–4 are complete. Auth, database schema, habit CRUD, and the home screen are all functional. The app runs in dark mode with habit cards, optimistic increment, and create/edit/delete flows. **Next up: Phase 5 (Heatmap visualization).**
+Phases 1–5 are complete. Auth, database schema, habit CRUD, home screen with optimistic increment, and heatmap visualization are all functional. The app runs in dark mode with habit cards showing a GitHub-style heatmap grid (16 weeks, 7 rows). **Next up: Phase 6 (Habit detail view).**
 
 ---
 
@@ -115,48 +115,54 @@ Not included:
 - Atomic upsert via `increment_habit_entry` RPC
 - Count displayed as `count / daily_target`
 
-### [ ] Fetch habit entries (range query) — deferred to Phase 5
+### [DONE] Fetch habit entries (range query)
 
-- Currently only fetches today's entries
-- Full range query (last ~120 days) needed for heatmap
+- Dashboard fetches 16 weeks of entries in a single range query
+- Entries grouped by habit_id into `HeatmapEntry[]` arrays
 
 ---
 
 # Phase 5 — Heatmap (Core Feature)
 
-### [ ] Heatmap component (reusable)
+### [DONE] Heatmap component (reusable)
 
-Input: Array of `{ date, count }` + `daily_target`
-Output: Grid of squares with color intensity = `count / daily_target`
+- `components/habits/heatmap.tsx` — pure client component
+- CSS Grid: 7 rows (Mon–Sun), `grid-auto-flow: column`, today in rightmost column
+- Intensity = `count / daily_target`, clamped to [0, 1]
+- Empty cells use faint `rgba(255,255,255,0.03)`, filled cells use habit color with `opacity: 0.2 + intensity * 0.8`
+- Today's cell highlighted with outline ring
 
-Rules:
-- 0 → empty
-- < target → partial intensity
-- >= target → full
+### [DONE] Home screen mini-heatmap
 
-### [ ] Home screen mini-heatmap
-
-- Attach heatmap to each habit card
-- Show recent history (last 12-16 weeks)
-- Updates immediately after increment
+- Dashboard fetches 16 weeks of entries (single range query, no N+1)
+- Each habit card renders `<Heatmap />` below the progress bar
+- Date helpers added to `lib/dates.ts`: `subtractDays`, `addDays`, `getDayOfWeek`, `generateDateRange`
+- Types: `HeatmapEntry`, `HeatmapCell`, `HabitWithEntries`
 
 ---
 
 # Phase 6 — Habit Detail View
 
-### [ ] Habit detail modal/screen
+### [ ] Habit detail modal
 
-- Open on habit tap
-- Show: name, color, full heatmap
+- Opens as a bottom sheet / modal when tapping a habit card (not the edit/delete/increment buttons)
+- Header: habit name, description (or "No Description"), close (X) button
+- Full-width heatmap (reuse `<Heatmap />`) with month labels above and day-of-week labels (Mon, Wed, Fri) on the left
+- Summary row below heatmap: streak goal badge, fire icon with current streak count
+- Action buttons: edit (pencil) and settings (gear) icons
 
 ### [ ] Monthly calendar view
 
-- Grid of current month
-- Each day shows count (dots or number)
+- 7-column grid (Sun–Sat) for the current month
+- Days with entries get a tinted background (habit color, low opacity)
+- Colored dots below the date number indicating count (e.g., 3 dots = count of 3)
+- Days outside the current month shown but muted
 
 ### [ ] Date navigation
 
-- Previous / next month buttons
+- "Feb 2026" label with calendar icon at bottom-left
+- Previous / next month arrow buttons at bottom-right
+- Navigating months updates the calendar grid; heatmap stays fixed
 
 ---
 
@@ -176,10 +182,9 @@ Rules:
 
 # Phase 8 — Polish (MVP-level)
 
-### [PARTIAL] Color system integration
+### [DONE] Color system integration
 
-- Habit color drives card accent bar, increment button, and progress bar
-- [ ] Habit color drives heatmap intensity (Phase 5)
+- Habit color drives card accent bar, increment button, progress bar, and heatmap intensity
 
 ### [DONE] Empty states
 
@@ -207,7 +212,7 @@ Rules:
 # Key Engineering Decisions
 
 - **Date key format**: `YYYY-MM-DD` (date column)
-- **Heatmap window**: fixed, last 120 days
+- **Heatmap window**: 16 weeks (~112 days), configurable via `HEATMAP_WEEKS` constant
 - **Upsert strategy**: Postgres function `increment_habit_entry(habit_id, entry_date)` for atomic increment
 - **Data fetching**: Server actions for mutations, single-range fetch for entries to avoid N+1
 - **Rendering**: Server Components for data fetching, Client Components for interactions
