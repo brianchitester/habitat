@@ -15,7 +15,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   title: "Habitat",
-  description: "A modern web application built with Next.js and Supabase authentication",
+  description: "Build better habits, one day at a time.",
 };
 
 export default function RootLayout({
