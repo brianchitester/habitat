@@ -19,7 +19,11 @@ interface HabitCardProps {
 }
 
 export function HabitCard({ habit, onEdit, onDelete, onCardClick }: HabitCardProps) {
-  const [count, setCount] = useState(habit.todayCount);
+  // Derive todayCount on the client to avoid server/client timezone mismatch.
+  // The server's getLocalDateString() may return a different date than the client's.
+  const clientToday = getLocalDateString();
+  const initialCount = habit.entries.find((e) => e.date === clientToday)?.count ?? 0;
+  const [count, setCount] = useState(initialCount);
   const [isPending, startTransition] = useTransition();
 
   const progress = Math.min((count / habit.daily_target) * 100, 100);

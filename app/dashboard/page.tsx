@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { getSupabaseServer } from "@/lib/supabase/server";
-import { getLocalDateString, subtractDays } from "@/lib/dates";
+import { getLocalDateString, subtractDays, addDays } from "@/lib/dates";
 import { HEATMAP_WEEKS } from "@/lib/constants";
 import { UserProfile } from "@/components/auth/user-profile";
 import { HabitList } from "@/components/habits/habit-list";
@@ -16,8 +16,12 @@ export default async function DashboardPage() {
     redirect("/auth?message=Please sign in to view your dashboard");
   }
 
-  const today = getLocalDateString();
-  const startDate = subtractDays(today, HEATMAP_WEEKS * 7 - 1);
+  // Add ±1 day buffer to account for server/client timezone differences.
+  // todayCount is derived on the client from entries, so we just need to
+  // ensure the date range covers the client's "today" regardless of offset.
+  const serverToday = getLocalDateString();
+  const startDate = subtractDays(serverToday, HEATMAP_WEEKS * 7);
+  const endDate = addDays(serverToday, 1);
 
   // Fetch habits and date-range entries in parallel (avoid N+1)
   const [habitsResult, entriesResult] = await Promise.all([
@@ -31,7 +35,7 @@ export default async function DashboardPage() {
       .select("habit_id, date, count")
       .eq("user_id", user.id)
       .gte("date", startDate)
-      .lte("date", today),
+      .lte("date", endDate),
   ]);
 
   const habits = habitsResult.data ?? [];
@@ -39,9 +43,7 @@ export default async function DashboardPage() {
 
   // Group entries by habit_id
   const entriesByHabit = new Map<string, HeatmapEntry[]>();
-  const todayMap = new Map<string, number>();
   for (const entry of entries) {
-    // Build heatmap entries map
     if (!entriesByHabit.has(entry.habit_id)) {
       entriesByHabit.set(entry.habit_id, []);
     }
@@ -49,17 +51,13 @@ export default async function DashboardPage() {
       date: entry.date,
       count: entry.count,
     });
-
-    // Track today's count separately
-    if (entry.date === today) {
-      todayMap.set(entry.habit_id, entry.count);
-    }
   }
 
-  // Merge habits with entries
+  // todayCount is derived on the client side (habit-card.tsx) to avoid
+  // timezone mismatch — the server's "today" may differ from the client's.
   const habitsWithEntries: HabitWithEntries[] = habits.map((habit) => ({
     ...habit,
-    todayCount: todayMap.get(habit.id) ?? 0,
+    todayCount: 0,
     entries: entriesByHabit.get(habit.id) ?? [],
   }));
 
