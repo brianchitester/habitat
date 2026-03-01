@@ -7,34 +7,41 @@ export async function GET(request: NextRequest) {
   const requestUrl = new URL(request.url);
   const code = requestUrl.searchParams.get("code");
 
-  if (code) {
-    const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              );
-            } catch {
-              // ignore errors from Server Components
-            }
-          },
-        },
-      }
+  if (!code) {
+    return NextResponse.redirect(
+      `${requestUrl.origin}/auth?error=${encodeURIComponent("Could not verify email link. Please try again.")}`
     );
+  }
 
-    try {
-      await supabase.auth.exchangeCodeForSession(code);
-    } catch (error) {
-      console.error("Error exchanging code for session:", error);
+  const cookieStore = await cookies();
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
+        },
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) =>
+              cookieStore.set(name, value, options)
+            );
+          } catch {
+            // ignore errors from Server Components
+          }
+        },
+      },
     }
+  );
+
+  try {
+    await supabase.auth.exchangeCodeForSession(code);
+  } catch (error) {
+    console.error("Error exchanging code for session:", error);
+    return NextResponse.redirect(
+      `${requestUrl.origin}/auth?error=${encodeURIComponent("Could not verify email link. Please try again.")}`
+    );
   }
 
   return NextResponse.redirect(`${requestUrl.origin}/dashboard`);

@@ -8,6 +8,20 @@ export const habitFormSchema = z.object({
 
 export type HabitFormValues = z.infer<typeof habitFormSchema>;
 
+export const signInSchema = z.object({
+  email: z.email("Please enter a valid email address"),
+  password: z.string().min(1, "Password is required"),
+});
+
+export type SignInValues = z.infer<typeof signInSchema>;
+
+export const signUpSchema = z.object({
+  email: z.email("Please enter a valid email address"),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+});
+
+export type SignUpValues = z.infer<typeof signUpSchema>;
+
 export const dateStringSchema = z.string().regex(
   /^\d{4}-\d{2}-\d{2}$/,
   "Date must be in YYYY-MM-DD format"
